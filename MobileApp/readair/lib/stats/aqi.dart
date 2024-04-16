@@ -20,42 +20,40 @@ class _AQIPageState extends State<AQIPage> {
   List<DataPacket> packets = [];
   final Random _random = Random();
 
-  int? AQIcurrentValue;
-  int? AQImax;
-  int? AQImin;
-  double? averageOverTwoFourHour;  // Variable to hold the average
-  List<FlSpot> aqiSpots = [];
+  double? current;
+  double? average;
+  double? maxVal;
+  double? minVal;
+  List<FlSpot> valSpots = [];
+  List<DataPoint> valDataPoints = []; // Adapted for GraphWidget
 
   @override
   void initState() {
     super.initState();
-    fetchAQIData();
+    fetchTempData();
   }
 
-  Future<void> fetchAQIData() async {
-    // Fetch the latest AQI value
-    DataPacket? latestPacket = await DatabaseService.instance.getLastPacket();
-    if (latestPacket != null) {
-      setState(() {
-        AQIcurrentValue = latestPacket.aqi.toInt();
-      });
-    }
 
-    // Fetch the AQI measurements for the last 24 hours
+  Future<void> fetchTempData() async {
     List<DataPacket> lastTwentyFourHourPackets =
-        await DatabaseService.instance.getPacketsForLastHours(24);
-    
+        await DatabaseService.instance.getPacketsForLastHours(2400);
+
+      // Calculate other statistics as needed
     if (lastTwentyFourHourPackets.isNotEmpty) {
-      double totalAqi = lastTwentyFourHourPackets.map((packet) => packet.aqi).reduce((a, b) => a + b);
-      averageOverTwoFourHour = totalAqi / lastTwentyFourHourPackets.length;
+      current = lastTwentyFourHourPackets.first.aqi;
+
+      valDataPoints = lastTwentyFourHourPackets
+          .map((packet) => DataPoint(packet.aqi, packet.epochTime.toInt()))
+          .toList();
+
+      double totalTemp = lastTwentyFourHourPackets.map((packet) => packet.aqi).reduce((a, b) => a + b);
+      average = totalTemp / lastTwentyFourHourPackets.length;
+
+      maxVal = lastTwentyFourHourPackets.map((packet) => packet.aqi).reduce(max);
+      minVal = lastTwentyFourHourPackets.map((packet) => packet.aqi).reduce(min);
+
+      valSpots = lastTwentyFourHourPackets.asMap().entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value.aqi)).toList();
     }
-
-    aqiSpots = lastTwentyFourHourPackets.map((packet) => FlSpot(
-      lastTwentyFourHourPackets.indexOf(packet).toDouble(), packet.aqi)
-    ).toList();
-
-    AQImax = lastTwentyFourHourPackets.map((packet) => packet.aqi.toInt()).reduce(max);
-    AQImin = lastTwentyFourHourPackets.map((packet) => packet.aqi.toInt()).reduce(min);
 
     setState(() {});
   }
@@ -97,7 +95,7 @@ class _AQIPageState extends State<AQIPage> {
   Widget build(BuildContext context) {
     List<FlSpot> data = generateRandomData();
 
-  List<DataPoint> dataPoints = aqiSpots
+  List<DataPoint> dataPoints = valSpots
       .asMap()
       .entries
       .map((entry) => DataPoint(entry.value.y, entry.key))
@@ -139,11 +137,11 @@ class _AQIPageState extends State<AQIPage> {
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: AQIColor(averageOverTwoFourHour?.toInt() ?? 0),
+                      color: AQIColor(average?.toInt() ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('${AQIcurrentValue?.toStringAsFixed(1) ?? '-'}',
+                          Text('${current?.toStringAsFixed(1) ?? '-'}',
                               style: TextStyle(
                                   fontSize: 38, color: Colors.white70)),
                         ],
@@ -152,11 +150,11 @@ class _AQIPageState extends State<AQIPage> {
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: AQIColor(averageOverTwoFourHour?.toInt() ?? 0),
+                      color: AQIColor(average?.toInt() ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('$averageOverTwoFourHour',
+                          Text('${average?.toStringAsFixed(1) ?? '-'}',
                               style: TextStyle(
                                   fontSize: 38, color: Colors.white70)),
                         ],
@@ -169,7 +167,7 @@ class _AQIPageState extends State<AQIPage> {
               padding: EdgeInsets.all(2.0),
               child: ListTile(
                 title: Center(
-                    child: Text('Air Quality Index is ${AQImessage(AQIcurrentValue?.toInt() ?? 0)}',
+                    child: Text('Air Quality Index is ${AQImessage(current?.toInt() ?? 0)}',
                         style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
               ),
             ),
@@ -180,7 +178,10 @@ class _AQIPageState extends State<AQIPage> {
               endIndent: 20,
             ),
 
-            GraphWidget(title: "Air Quality Index Over Time", dataPoints: dataPoints),
+                                    GraphWidget(
+              title: "AQI Over Time",
+              dataPoints: valDataPoints,
+            ),
 
             const Divider(
               thickness: 3,
@@ -211,14 +212,11 @@ class _AQIPageState extends State<AQIPage> {
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: AQIColor(AQImax ?? 0),
+                      color: AQIColor(maxVal?.toInt() ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('AQI',
-                              style: TextStyle(
-                                  fontSize: 20, color: Colors.white70)),
-                          Text('$AQImax',
+                          Text('$maxVal',
                               style: TextStyle(
                                   fontSize: 50, color: Colors.white70))
                         ],
@@ -227,14 +225,11 @@ class _AQIPageState extends State<AQIPage> {
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: AQIColor(AQImin ?? 0),
+                      color: AQIColor(minVal?.toInt() ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('AQI',
-                              style: TextStyle(
-                                  fontSize: 20, color: Colors.white70)),
-                          Text('$AQImin',
+                          Text('$minVal',
                               style: TextStyle(
                                   fontSize: 50, color: Colors.white70))
                         ],

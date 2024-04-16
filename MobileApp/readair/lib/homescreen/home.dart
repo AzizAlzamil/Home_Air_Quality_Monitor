@@ -123,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Row(
                   children: [
                     Text(
-                      'Welcome v1.1',
+                      'Welcome v1.12',
                       style:
                           TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                     ),
@@ -228,7 +228,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Card(
                   child: ListTile(
                     title: Text(
-                        'Temperature: ${temp?.toStringAsFixed(1) ?? 'N/A'}°C',
+                        'Temperature: ${temp?.toStringAsFixed(1) ?? 'N/A'}°F',
                         style: TextStyle(fontSize: 20)),
                     trailing: Icon(Icons.wb_sunny, size: 40),
                   ),

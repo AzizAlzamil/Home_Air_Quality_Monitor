@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/stats/graph.dart';
 
 class TempPage extends StatefulWidget {
   @override
@@ -16,6 +17,7 @@ class _TempPageState extends State<TempPage> {
   double? maxTemp;
   double? minTemp;
   List<FlSpot> tempSpots = [];
+  List<DataPoint> tempDataPoints = []; // Adapted for GraphWidget
 
   @override
   void initState() {
@@ -26,10 +28,15 @@ class _TempPageState extends State<TempPage> {
 
   Future<void> fetchTempData() async {
     List<DataPacket> lastTwentyFourHourPackets =
-        await DatabaseService.instance.getPacketsForLastHours(24);
+        await DatabaseService.instance.getPacketsForLastHours(2400);
 
+      // Calculate other statistics as needed
     if (lastTwentyFourHourPackets.isNotEmpty) {
       currentTemp = lastTwentyFourHourPackets.first.temp;
+
+      tempDataPoints = lastTwentyFourHourPackets
+          .map((packet) => DataPoint(packet.temp, packet.epochTime.toInt()))
+          .toList();
 
       double totalTemp = lastTwentyFourHourPackets.map((packet) => packet.temp).reduce((a, b) => a + b);
       averageTemp = totalTemp / lastTwentyFourHourPackets.length;
@@ -85,24 +92,24 @@ class _TempPageState extends State<TempPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Temperature"),
-        actions: [
-          // Switch to toggle between Celsius and Fahrenheit
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Switch(
-              value: isCelsius,
-              onChanged: (value) {
-                setState(() {
-                  isCelsius = value;
-                });
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(isCelsius ? "°C" : "°F"),
-          ),
-        ],
+        // actions: [
+        //   // Switch to toggle between Celsius and Fahrenheit
+        //   Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Switch(
+        //       value: isCelsius,
+        //       onChanged: (value) {
+        //         setState(() {
+        //           isCelsius = value;
+        //         });
+        //       },
+        //     ),
+        //   ),
+        //   Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Text(isCelsius ? "°C" : "°F"),
+        //   ),
+        // ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -180,50 +187,54 @@ class _TempPageState extends State<TempPage> {
                         Text('24 Hour Span', style: TextStyle(fontSize: 30))),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          interval: 10,
-                          getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}');
-                          },
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 20,
-                          interval: 1,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 5 == 0) return Text('${value.toInt()}h');
-                            return Text('');
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: tempSpots,
-                        isCurved: true,
-                        dotData: FlDotData(show: false),
-                        color: Colors.blue,
-                        barWidth: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                        GraphWidget(
+              title: "Temperature Over Time",
+              dataPoints: tempDataPoints,
             ),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Container(
+            //     height: 300,
+            //     child: LineChart(
+            //       LineChartData(
+            //         gridData: FlGridData(show: false),
+            //         titlesData: FlTitlesData(
+            //           leftTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               reservedSize: 40,
+            //               interval: 10,
+            //               getTitlesWidget: (value, meta) {
+            //                 return Text('${value.toInt()}');
+            //               },
+            //             ),
+            //           ),
+            //           bottomTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               reservedSize: 20,
+            //               interval: 1,
+            //               getTitlesWidget: (value, meta) {
+            //                 if (value % 5 == 0) return Text('${value.toInt()}h');
+            //                 return Text('');
+            //               },
+            //             ),
+            //           ),
+            //         ),
+            //         borderData: FlBorderData(show: true),
+            //         lineBarsData: [
+            //           LineChartBarData(
+            //             spots: tempSpots,
+            //             isCurved: true,
+            //             dotData: FlDotData(show: false),
+            //             color: Colors.blue,
+            //             barWidth: 3,
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
             const Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [

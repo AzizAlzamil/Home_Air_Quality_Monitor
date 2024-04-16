@@ -9,6 +9,7 @@ class DisplayPage extends StatefulWidget {
 
 class _DisplayPageState extends State<DisplayPage> {
   final BluetoothController bluetoothController = Get.find<BluetoothController>();
+  List<String> selectedOptions = []; // List to track selected options
 
   @override
   Widget build(BuildContext context) {
@@ -20,114 +21,90 @@ class _DisplayPageState extends State<DisplayPage> {
         ),
         title: Text("Customize HomeAir Display"),
       ),
-      body: Column(
+      body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDDE=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Dot Enable'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Dot Enable'),
+            value: selectedOptions.contains("EPDDE=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDDE=1", value);
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDDL=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Dot Location'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Dot Location'),
+            value: selectedOptions.contains("EPDDL=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDDL=1", value);
+            },
           ),
-                    Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDCL=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Clock Location'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Clock Location'),
+            value: selectedOptions.contains("EPDCL=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDCL=1", value);
+            },
           ),
-                    Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDCE=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Clock Enable (EDPCE)'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Clock Enable (EPDCE)'),
+            value: selectedOptions.contains("EPDCE=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDCE=1", value);
+            },
           ),
-                    Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDLF=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Clock Enable (EDPLF)'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Clock Enable (EDPLF)'),
+            value: selectedOptions.contains("EPDLF=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDLF=1", value);
+            },
           ),
-                              Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDRF=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Clock Enable (EDPRF)'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Clock Enable (EDPRF)'),
+            value: selectedOptions.contains("EPDRF=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDRF=1", value);
+            },
           ),
-                              Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "EPDRP=1");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('EPD Refresh Period'),
-            ),
+          CheckboxListTile(
+            title: Text('EPD Refresh Period'),
+            value: selectedOptions.contains("EPDRP=1"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("EPDRP=1", value);
+            },
           ),
-                                        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                if (bluetoothController.connectedDevice != null) {
-                  bluetoothController.sendData(bluetoothController.connectedDevice!, "TEST!");
-                } else {
-                  print('No device connected');
-                }
-              },
-              child: Text('Test'),
-            ),
+          CheckboxListTile(
+            title: Text('Test'),
+            value: selectedOptions.contains("TEST!"),
+            onChanged: (bool? value) {
+              handleCheckboxChanged("TEST!", value);
+            },
+          ),
+          ElevatedButton(
+            onPressed: submitAllCommands,
+            child: Text('Submit All Commands'),
           ),
         ],
       ),
     );
+  }
+
+  void handleCheckboxChanged(String command, bool? value) {
+    setState(() {
+      if (value == true) {
+        selectedOptions.add(command);
+      } else {
+        selectedOptions.remove(command);
+      }
+    });
+  }
+
+  void submitAllCommands() {
+    if (bluetoothController.connectedDevice != null && selectedOptions.isNotEmpty) {
+      selectedOptions.forEach((command) {
+        bluetoothController.sendData(bluetoothController.connectedDevice!, command);
+      });
+    } else {
+      print('No device connected or no commands selected');
+    }
   }
 }

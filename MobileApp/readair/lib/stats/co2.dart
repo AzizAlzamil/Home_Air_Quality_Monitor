@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/stats/graph.dart';
 
 class CO2Page extends StatefulWidget {
   @override
@@ -19,6 +20,7 @@ class _CO2PageState extends State<CO2Page> {
   double? maxCO2;
   double? minCO2;
   List<FlSpot> valSpots = [];
+  List<DataPoint> valDataPoints = []; 
 
     @override
   void initState() {
@@ -28,10 +30,14 @@ class _CO2PageState extends State<CO2Page> {
 
     Future<void> fetchco2Data() async {
     List<DataPacket> lastTwentyFourHourPackets =
-        await DatabaseService.instance.getPacketsForLastHours(24);
+        await DatabaseService.instance.getPacketsForLastHours(2400);
 
     if (lastTwentyFourHourPackets.isNotEmpty) {
       current = lastTwentyFourHourPackets.first.co2;
+
+            valDataPoints = lastTwentyFourHourPackets
+          .map((packet) => DataPoint(packet.co2, packet.epochTime.toInt()))
+          .toList();
 
       double totalco2 = lastTwentyFourHourPackets.map((packet) => packet.co2).reduce((a, b) => a + b);
       average = totalco2 / lastTwentyFourHourPackets.length;
@@ -160,51 +166,54 @@ class _CO2PageState extends State<CO2Page> {
                         Text('24 Hour Span', style: TextStyle(fontSize: 30))),
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 10 == 0)
-                              return Text('${value.toInt()}');
-                            return Text('');
-                          },
-                          reservedSize: 40,
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}');
-                          },
-                          reservedSize: 20,
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: valSpots,
-                        isCurved: true,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(show: false),
-                        color: Colors.blue,
-                        barWidth: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                                    GraphWidget(
+              title: "CO2 Over Time",
+              dataPoints: valDataPoints,
             ),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Container(
+            //     height: 300,
+            //     child: LineChart(
+            //       LineChartData(
+            //         gridData: FlGridData(show: false),
+            //         titlesData: FlTitlesData(
+            //           leftTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               getTitlesWidget: (value, meta) {
+            //                 if (value % 10 == 0)
+            //                   return Text('${value.toInt()}');
+            //                 return Text('');
+            //               },
+            //               reservedSize: 40,
+            //             ),
+            //           ),
+            //           bottomTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               getTitlesWidget: (value, meta) {
+            //                 return Text('${value.toInt()}');
+            //               },
+            //               reservedSize: 20,
+            //             ),
+            //           ),
+            //         ),
+            //         borderData: FlBorderData(show: true),
+            //         lineBarsData: [
+            //           LineChartBarData(
+            //             spots: valSpots,
+            //             isCurved: true,
+            //             dotData: FlDotData(show: false),
+            //             belowBarData: BarAreaData(show: false),
+            //             color: Colors.blue,
+            //             barWidth: 3,
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
 
             const Divider(
               thickness: 3,

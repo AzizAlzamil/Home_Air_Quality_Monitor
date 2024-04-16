@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/stats/graph.dart';
 
 class COPage extends StatefulWidget {
   @override
@@ -23,6 +24,7 @@ class _COPageState extends State<COPage> {
   double? maxVal;
   double? minVal;
   List<FlSpot> valSpots = [];
+  List<DataPoint> valDataPoints = [];
 
       @override
   void initState() {
@@ -32,10 +34,14 @@ class _COPageState extends State<COPage> {
 
     Future<void> fetchValData() async {
     List<DataPacket> lastTwentyFourHourPackets =
-        await DatabaseService.instance.getPacketsForLastHours(24);
+        await DatabaseService.instance.getPacketsForLastHours(2400);
 
     if (lastTwentyFourHourPackets.isNotEmpty) {
       current = lastTwentyFourHourPackets.first.co;
+
+            valDataPoints = lastTwentyFourHourPackets
+          .map((packet) => DataPoint(packet.co, packet.epochTime.toInt()))
+          .toList();
 
       double totalVal = lastTwentyFourHourPackets.map((packet) => packet.ng).reduce((a, b) => a + b);
       average = totalVal / lastTwentyFourHourPackets.length;
@@ -166,51 +172,54 @@ class _COPageState extends State<COPage> {
                         Text('24 Hour Span', style: TextStyle(fontSize: 30))),
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 10 == 0)
-                              return Text('${value.toInt()}');
-                            return Text('');
-                          },
-                          reservedSize: 40,
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}');
-                          },
-                          reservedSize: 20,
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: valSpots,
-                        isCurved: true,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(show: false),
-                        color: Colors.blue,
-                        barWidth: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                                    GraphWidget(
+              title: "CO Over Time",
+              dataPoints: valDataPoints,
             ),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Container(
+            //     height: 300,
+            //     child: LineChart(
+            //       LineChartData(
+            //         gridData: FlGridData(show: false),
+            //         titlesData: FlTitlesData(
+            //           leftTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               getTitlesWidget: (value, meta) {
+            //                 if (value % 10 == 0)
+            //                   return Text('${value.toInt()}');
+            //                 return Text('');
+            //               },
+            //               reservedSize: 40,
+            //             ),
+            //           ),
+            //           bottomTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               getTitlesWidget: (value, meta) {
+            //                 return Text('${value.toInt()}');
+            //               },
+            //               reservedSize: 20,
+            //             ),
+            //           ),
+            //         ),
+            //         borderData: FlBorderData(show: true),
+            //         lineBarsData: [
+            //           LineChartBarData(
+            //             spots: valSpots,
+            //             isCurved: true,
+            //             dotData: FlDotData(show: false),
+            //             belowBarData: BarAreaData(show: false),
+            //             color: Colors.blue,
+            //             barWidth: 3,
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
 
             const Divider(
               thickness: 3,

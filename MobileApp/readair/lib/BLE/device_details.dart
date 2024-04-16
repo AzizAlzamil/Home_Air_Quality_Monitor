@@ -219,6 +219,7 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
       await _readDataFromEsp32();
     });
   }
+  
 
   Future<void> _readDataFromEsp32() async {
     if (writeCharacteristic != null) {

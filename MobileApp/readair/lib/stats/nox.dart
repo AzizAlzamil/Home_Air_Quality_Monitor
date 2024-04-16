@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/stats/graph.dart';
 
 class NOxPage extends StatefulWidget {
   @override
@@ -23,31 +24,45 @@ class _NOxPageState extends State<NOxPage> {
   double? maxVal;
   double? minVal;
   List<FlSpot> valSpots = [];
+  List<DataPoint> valDataPoints = [];
 
-      @override
+  @override
   void initState() {
     super.initState();
     fetchValData();
   }
 
-    Future<void> fetchValData() async {
+  Future<void> fetchValData() async {
     List<DataPacket> lastTwentyFourHourPackets =
-        await DatabaseService.instance.getPacketsForLastHours(24);
+        await DatabaseService.instance.getPacketsForLastHours(2400);
 
     if (lastTwentyFourHourPackets.isNotEmpty) {
       current = lastTwentyFourHourPackets.first.nox;
 
-      double totalVal = lastTwentyFourHourPackets.map((packet) => packet.nox).reduce((a, b) => a + b);
+      valDataPoints = lastTwentyFourHourPackets
+          .map((packet) => DataPoint(packet.nox, packet.epochTime.toInt()))
+          .toList();
+
+      double totalVal = lastTwentyFourHourPackets
+          .map((packet) => packet.nox)
+          .reduce((a, b) => a + b);
       average = totalVal / lastTwentyFourHourPackets.length;
 
-      maxVal = lastTwentyFourHourPackets.map((packet) => packet.nox).reduce(max);
-      minVal = lastTwentyFourHourPackets.map((packet) => packet.nox).reduce(min);
+      maxVal =
+          lastTwentyFourHourPackets.map((packet) => packet.nox).reduce(max);
+      minVal =
+          lastTwentyFourHourPackets.map((packet) => packet.nox).reduce(min);
 
-      valSpots = lastTwentyFourHourPackets.asMap().entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value.nox)).toList();
+      valSpots = lastTwentyFourHourPackets
+          .asMap()
+          .entries
+          .map((entry) => FlSpot(entry.key.toDouble(), entry.value.nox))
+          .toList();
     }
 
     setState(() {});
   }
+
   Color? CoordinatedColor(int value) {
     //Colors cordinated with the danger levels
     if (value <= 53) {
@@ -93,7 +108,7 @@ class _NOxPageState extends State<NOxPage> {
         child: Column(
           children: [
             const SizedBox(height: 10), //Spacing between the "boxes"
-              const Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Padding(
@@ -141,13 +156,15 @@ class _NOxPageState extends State<NOxPage> {
                 ),
               ],
             ),
-            
+
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
                 title: Center(
-                    child: Text('Nitrogen Oxides is ${message(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                    child: Text(
+                        'Nitrogen Oxides is ${message(current?.toInt() ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold))),
               ),
             ),
 
@@ -166,52 +183,57 @@ class _NOxPageState extends State<NOxPage> {
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 10 == 0)
-                              return Text('${value.toInt()}');
-                            return Text('');
-                          },
-                          reservedSize: 40,
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}');
-                          },
-                          reservedSize: 20,
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: valSpots,
-                        isCurved: true,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(show: false),
-                        color: Colors.blue,
-                        barWidth: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                                                GraphWidget(
+              title: "NOx Over Time",
+              dataPoints: valDataPoints,
             ),
 
-           const Divider(
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Container(
+            //     height: 300,
+            //     child: LineChart(
+            //       LineChartData(
+            //         gridData: FlGridData(show: false),
+            //         titlesData: FlTitlesData(
+            //           leftTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               getTitlesWidget: (value, meta) {
+            //                 if (value % 10 == 0)
+            //                   return Text('${value.toInt()}');
+            //                 return Text('');
+            //               },
+            //               reservedSize: 40,
+            //             ),
+            //           ),
+            //           bottomTitles: AxisTitles(
+            //             sideTitles: SideTitles(
+            //               showTitles: true,
+            //               getTitlesWidget: (value, meta) {
+            //                 return Text('${value.toInt()}');
+            //               },
+            //               reservedSize: 20,
+            //             ),
+            //           ),
+            //         ),
+            //         borderData: FlBorderData(show: true),
+            //         lineBarsData: [
+            //           LineChartBarData(
+            //             spots: valSpots,
+            //             isCurved: true,
+            //             dotData: FlDotData(show: false),
+            //             belowBarData: BarAreaData(show: false),
+            //             color: Colors.blue,
+            //             barWidth: 3,
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
+
+            const Divider(
               thickness: 3,
               indent: 20,
               endIndent: 20,

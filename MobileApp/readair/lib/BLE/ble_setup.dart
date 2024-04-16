@@ -199,30 +199,6 @@ class BluetoothController extends GetxController {
     }
   }
 
-  // Future<void> connectToDevice(BluetoothDevice device, BuildContext context) async {
-  //   if (isConnecting.value) return; // Prevent multiple connections at the same time
-
-  //   isConnecting.value = true; // Set to true when starting to connect
-  //   update(); // Call update to trigger UI changes
-  //   try {
-  //     await device.connect();
-  //     connectedDevice = device;
-  //     await requestMtuSize(device, 512);
-  //     discoverServices();
-  //     await subscribeToDevice(device);
-
-  //     // Navigate to the Device Details Page
-  //     Get.to(() => DeviceDetailsPage(
-  //           device: device,
-  //           onDisconnect: () => disconnectFromDevice(context),
-  //         ));
-  //   } catch (e) {
-  //     print('Error connecting to device: $e');
-  //   } finally {
-  //     isConnecting.value = false; // Reset after connection attempt
-  //     update(); // Call update to trigger UI changes
-  //   }
-  // }
 
   void disconnectFromDevice(BuildContext context) async {
     if (connectedDevice != null) {
