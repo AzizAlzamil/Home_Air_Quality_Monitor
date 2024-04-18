@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/aqi_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class AQIPage extends StatefulWidget {
@@ -109,6 +110,15 @@ class _AQIPageState extends State<AQIPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Air Quality Index"),
+                actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AQIHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -137,7 +147,7 @@ class _AQIPageState extends State<AQIPage> {
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: AQIColor(average?.toInt() ?? 0),
+                      color: AQIColor(current?.toInt() ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -166,9 +176,13 @@ class _AQIPageState extends State<AQIPage> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('Air Quality Index is ${AQImessage(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('The Air Quality is ${AQImessage(current?.toInt() ?? 0)}',
+                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
+
+                                
               ),
             ),
 

@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/nox_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class NOxPage extends StatefulWidget {
@@ -102,7 +103,24 @@ class _NOxPageState extends State<NOxPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Nitrogen Oxides (Nitrous Oxides)"),
+        title: //Text("Nitrogen Oxides (Nitrous Oxides)"),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Nitrogen Oxides (Nitrous Oxides)',
+                    
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
+                                actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => NOxHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -162,7 +180,7 @@ class _NOxPageState extends State<NOxPage> {
               child: ListTile(
                 title: Center(
                     child: Text(
-                        'Nitrogen Oxides is ${message(current?.toInt() ?? 0)}',
+                        'The NOx is ${message(current?.toInt() ?? 0)}',
                         style: TextStyle(
                             fontSize: 25, fontWeight: FontWeight.bold))),
               ),
@@ -298,8 +316,13 @@ class _NOxPageState extends State<NOxPage> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child: Text('NOX Index (nitrous oxides)',
-                        style: TextStyle(fontSize: 34))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'NOx Index (Nitrous Oxides)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 

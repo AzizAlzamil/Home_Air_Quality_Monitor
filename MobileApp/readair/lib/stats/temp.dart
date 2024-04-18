@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/temp_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class TempPage extends StatefulWidget {
@@ -55,27 +56,27 @@ class _TempPageState extends State<TempPage> {
   }
 
   Color? TEMPColor(double value) {
-    if (value <= 0) {
-      return Colors.blue[900];
-    } else if (value > 0 && value <= 15) {
-      return Colors.blue;
-    } else if (value > 15 && value <= 25) {
-      return Colors.green;
-    } else if (value > 25 && value <= 35) {
-      return Colors.orange;
+    if (value <= 31) {
+      return Color.fromARGB(255, 48, 49, 133);
+    } else if (value > 31 && value <= 58) {
+      return Color.fromARGB(255, 13, 146, 229);
+    } else if (value > 58 && value <= 71) {
+      return Color.fromARGB(255, 48, 133, 56);
+    } else if (value > 71 && value <= 94) {
+      return Color.fromARGB(255, 229, 114, 13);
     } else {
-      return Colors.red;
+      return Color.fromARGB(255, 217, 19, 4);
     }
   }
 
   String TEMPmessage(double value) {
-    if (value <= 0) {
+    if (value <= 31) {
       return "Very Cold";
-    } else if (value > 0 && value <= 15) {
+    } else if (value > 31 && value <= 58) {
       return "Cold";
-    } else if (value > 15 && value <= 25) {
+    } else if (value > 58 && value <= 71) {
       return "Comfortable";
-    } else if (value > 25 && value <= 35) {
+    } else if (value > 71 && value <= 94) {
       return "Warm";
     } else {
       return "Hot";
@@ -92,6 +93,15 @@ class _TempPageState extends State<TempPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Temperature"),
+                        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TempHelpPage()),
+            ),
+          ),
+        ],
         // actions: [
         //   // Switch to toggle between Celsius and Fahrenheit
         //   Padding(

@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/humid_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class HumidPage extends StatefulWidget {
@@ -95,6 +96,15 @@ class _HumidPageState extends State<HumidPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Humidity (%)"),
+                        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HumidityHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

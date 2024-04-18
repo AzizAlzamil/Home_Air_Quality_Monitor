@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/voc_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class VOCPage extends StatefulWidget {
@@ -95,7 +96,23 @@ class _VOCPageState extends State<VOCPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Volatile Organic Compounds (ppb)"),
+        title: //Text("Volatile Organic Compounds (ppb)"),
+        FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Volatile Organic Compounds (ppb)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
+                                actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => VOCHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -154,7 +171,7 @@ class _VOCPageState extends State<VOCPage> {
               padding: EdgeInsets.all(2.0),
               child: ListTile(
                 title: Center(
-                    child: Text('VOC is ${message(current?.toInt() ?? 0)}',
+                    child: Text('The VOCs are ${message(current?.toInt() ?? 0)}',
                         style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
               ),
             ),

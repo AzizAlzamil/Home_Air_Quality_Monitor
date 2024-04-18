@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/co2_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class CO2Page extends StatefulWidget {
@@ -90,6 +91,15 @@ class _CO2PageState extends State<CO2Page> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Carbon Dioxide (ppm)"),
+                        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CO2HelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

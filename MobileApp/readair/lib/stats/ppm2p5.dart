@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
+import 'package:readair/data/packet.dart';
+import 'package:readair/help/pm_help.dart';
+import 'package:readair/stats/graph.dart';
+
 class ppm2p5Page extends StatefulWidget {
   @override
   State<ppm2p5Page> createState() => _ppm2p5PageState();
@@ -16,11 +20,49 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
         10, (index) => FlSpot(index.toDouble(), _random.nextInt(90) + 10.0));
   }
 
-  // NEED TO MAKE DOUBLES SO CAN HAVE DECIMAL
-  double currentValue = 12.1; //The Current Value
-  double averageOverTwoFourHour = 37.3; //Average over past 24 hours
-  double max = 58.8; //Maximum value over past 24 hours
-  double min = 3.3; //Minimum value over past 24 hours
+  double? current;
+  double? average;
+  double? maxVal;
+  double? minVal;
+  List<FlSpot> valSpots = [];
+  List<DataPoint> valDataPoints = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchValData();
+  }
+
+  Future<void> fetchValData() async {
+    List<DataPacket> lastTwentyFourHourPackets =
+        await DatabaseService.instance.getPacketsForLastHours(2400);
+
+    if (lastTwentyFourHourPackets.isNotEmpty) {
+      current = lastTwentyFourHourPackets.first.ppm2_5;
+
+      valDataPoints = lastTwentyFourHourPackets
+          .map((packet) => DataPoint(packet.ppm2_5, packet.epochTime.toInt()))
+          .toList();
+
+      double totalVal = lastTwentyFourHourPackets
+          .map((packet) => packet.ppm2_5)
+          .reduce((a, b) => a + b);
+      average = totalVal / lastTwentyFourHourPackets.length;
+
+      maxVal =
+          lastTwentyFourHourPackets.map((packet) => packet.ppm2_5).reduce(max);
+      minVal =
+          lastTwentyFourHourPackets.map((packet) => packet.ppm2_5).reduce(min);
+
+      valSpots = lastTwentyFourHourPackets
+          .asMap()
+          .entries
+          .map((entry) => FlSpot(entry.key.toDouble(), entry.value.ppm2_5))
+          .toList();
+    }
+
+    setState(() {});
+  }
 
   Color? CoordinatedColor(double value) {
     //Colors cordinated with the danger levels
@@ -61,32 +103,84 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("PPM 2.5"),
+        title: 
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Particulate Matter 2.5 (ug/m\u00B3)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
+                        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PMHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 10), //Spacing between the "boxes"
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Card(
-                color: CoordinatedColor(currentValue),
-                child: ListTile(
-                  title: Center(
-                      child: Text('$currentValue (ug/m^3)',
-                          style: TextStyle(fontSize: 50))),
-                  textColor: Colors.white70,
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Current value',
+                    style: TextStyle(fontSize: 20),
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text('Average value', style: TextStyle(fontSize: 20)),
+                ),
+              ],
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: Card(
+                      color: CoordinatedColor(current ?? 0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('${current?.toStringAsFixed(1) ?? '-'}',
+                              style: TextStyle(
+                                  fontSize: 38, color: Colors.white70)),
+                        ],
+                      )),
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width / 2,
+                  child: Card(
+                      color: CoordinatedColor(average ?? 0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('${average?.toStringAsFixed(1) ?? '-'}',
+                              style: TextStyle(
+                                  fontSize: 38, color: Colors.white70)),
+                        ],
+                      )),
+                ),
+              ],
             ),
 
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
                 title: Center(
-                    child: Text(
-                        'The Parts Per Million is ${message(currentValue)}',
-                        style: TextStyle(fontSize: 23))),
+                    child: Text('PM is ${message(current ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold))),
               ),
             ),
 
@@ -105,77 +199,15 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 10 == 0)
-                              return Text('${value.toInt()}');
-                            return Text('');
-                          },
-                          reservedSize: 40,
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}');
-                          },
-                          reservedSize: 20,
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: true),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: data,
-                        isCurved: true,
-                        dotData: FlDotData(show: false),
-                        belowBarData: BarAreaData(show: false),
-                        color: Colors.blue,
-                        barWidth: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            GraphWidget(
+              title: "PM Over Time",
+              dataPoints: valDataPoints,
             ),
 
             const Divider(
               thickness: 3,
               indent: 20,
               endIndent: 20,
-            ),
-
-            const Padding(
-              padding: EdgeInsets.all(2.0),
-              child: ListTile(
-                title: Center(
-                    child: Text('Average Over Past 24hrs',
-                        style: TextStyle(fontSize: 25))),
-              ),
-            ),
-
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Card(
-                color: CoordinatedColor(averageOverTwoFourHour),
-                child: ListTile(
-                  title: Center(
-                      child: Text('$averageOverTwoFourHour (ug/m^3)',
-                          style: TextStyle(fontSize: 50))),
-                  textColor: Colors.white70,
-                ),
-              ),
             ),
 
             const Row(
@@ -185,7 +217,7 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
                   padding: EdgeInsets.all(8.0),
                   child: Text(
                     'Maximum',
-                    style: TextStyle(fontSize: 25, color: Colors.black),
+                    style: TextStyle(fontSize: 25),
                   ),
                 ),
                 Padding(
@@ -201,32 +233,31 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: CoordinatedColor(max),
+                      color: CoordinatedColor(maxVal ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('$max (ug/m^3)',
+                          Text('${maxVal?.toStringAsFixed(1) ?? '-'}',
                               style: TextStyle(
-                                  fontSize: 30, color: Colors.white70)),
+                                  fontSize: 50, color: Colors.white70)),
                         ],
                       )),
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width / 2,
                   child: Card(
-                      color: CoordinatedColor(min),
+                      color: CoordinatedColor(minVal ?? 0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('$min (ug/m^3)',
+                          Text('${minVal?.toStringAsFixed(1) ?? '-'}',
                               style: TextStyle(
-                                  fontSize: 30, color: Colors.white70)),
+                                  fontSize: 50, color: Colors.white70)),
                         ],
                       )),
                 ),
               ],
             ),
-
             const Divider(
               thickness: 3,
               indent: 20,
@@ -237,8 +268,13 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child: Text('Particles PM2.5 (ug/m^3)',
-                        style: TextStyle(fontSize: 30))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'PM2.5 (ug/m\u00B3)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 

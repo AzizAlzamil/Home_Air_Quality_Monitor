@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/co_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class COPage extends StatefulWidget {
@@ -26,30 +27,36 @@ class _COPageState extends State<COPage> {
   List<FlSpot> valSpots = [];
   List<DataPoint> valDataPoints = [];
 
-      @override
+  @override
   void initState() {
     super.initState();
     fetchValData();
   }
 
-    Future<void> fetchValData() async {
+  Future<void> fetchValData() async {
     List<DataPacket> lastTwentyFourHourPackets =
         await DatabaseService.instance.getPacketsForLastHours(2400);
 
     if (lastTwentyFourHourPackets.isNotEmpty) {
       current = lastTwentyFourHourPackets.first.co;
 
-            valDataPoints = lastTwentyFourHourPackets
+      valDataPoints = lastTwentyFourHourPackets
           .map((packet) => DataPoint(packet.co, packet.epochTime.toInt()))
           .toList();
 
-      double totalVal = lastTwentyFourHourPackets.map((packet) => packet.ng).reduce((a, b) => a + b);
+      double totalVal = lastTwentyFourHourPackets
+          .map((packet) => packet.ng)
+          .reduce((a, b) => a + b);
       average = totalVal / lastTwentyFourHourPackets.length;
 
       maxVal = lastTwentyFourHourPackets.map((packet) => packet.co).reduce(max);
       minVal = lastTwentyFourHourPackets.map((packet) => packet.co).reduce(min);
 
-      valSpots = lastTwentyFourHourPackets.asMap().entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value.co)).toList();
+      valSpots = lastTwentyFourHourPackets
+          .asMap()
+          .entries
+          .map((entry) => FlSpot(entry.key.toDouble(), entry.value.co))
+          .toList();
     }
 
     setState(() {});
@@ -95,12 +102,21 @@ class _COPageState extends State<COPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Carbon Monoxide (ppm)"),
+                        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => COHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 10), //Spacing between the "boxes"
-             const Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Padding(
@@ -148,13 +164,17 @@ class _COPageState extends State<COPage> {
                 ),
               ],
             ),
-            
+
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('Carbon Monoxide is ${message(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The Carbon Monoxide is ${message(current?.toInt() ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 
@@ -172,7 +192,7 @@ class _COPageState extends State<COPage> {
                         Text('24 Hour Span', style: TextStyle(fontSize: 30))),
               ),
             ),
-                                    GraphWidget(
+            GraphWidget(
               title: "CO Over Time",
               dataPoints: valDataPoints,
             ),
@@ -308,8 +328,13 @@ class _COPageState extends State<COPage> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child: Text('Carbon Monoxide (ppm)',
-                        style: TextStyle(fontSize: 31))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Carbon Monoxide (ppm)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 

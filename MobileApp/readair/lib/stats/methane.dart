@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:math';
 
 import 'package:readair/data/packet.dart';
+import 'package:readair/help/methane_help.dart';
 import 'package:readair/stats/graph.dart';
 
 class MethanePage extends StatefulWidget {
@@ -95,6 +96,15 @@ class _MethanePageState extends State<MethanePage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text("Methane (ppm)"),
+                        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.help_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MethaneHelpPage()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
