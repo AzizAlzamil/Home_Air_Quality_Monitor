@@ -95,7 +95,13 @@ class _MethanePageState extends State<MethanePage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Methane (ppm)"),
+        title: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Methane (ppm)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
                         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.help_outline),
@@ -162,9 +168,13 @@ class _MethanePageState extends State<MethanePage> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('Methane is ${message(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The Methane level is ${message(current?.toInt() ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 
@@ -298,8 +308,13 @@ class _MethanePageState extends State<MethanePage> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child:
-                        Text('Methane (ppm)', style: TextStyle(fontSize: 34))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Methane Index (ppm)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 

@@ -28,22 +28,18 @@ class _GraphWidgetState extends State<GraphWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredDataPoints =
-        _filterDataPoints(widget.dataPoints, _selectedTimeRange);
-    // Ensuring only 100 datasets are shown
-    final points = filteredDataPoints.length > 100
-        ? filteredDataPoints.sublist(0, 100)
-        : filteredDataPoints;
+
+    final filteredDataPoints = _filterDataPoints(widget.dataPoints, _selectedTimeRange);
+    final points = filteredDataPoints;
     final double minY = points.isNotEmpty
         ? max(points.map((e) => e.measurement).reduce(min) - 100.0, 0.0)
         : 0.0;
-
-    final maxY = points.isNotEmpty
+    final double maxY = points.isNotEmpty
         ? points.map((e) => e.measurement).reduce(max) + 100.0
         : 100.0;
 
-    // Calculate y-axis interval
-    final yInterval = ((maxY - minY) / 4);
+    double xLabelInterval = max(1, points.length / 5);
+    double yLabelInterval = (maxY - minY) / 5;
 
     return Column(
       children: [
@@ -73,105 +69,140 @@ class _GraphWidgetState extends State<GraphWidget> {
           child: Text(widget.title,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         ),
-        Container(
-          height: 300,
-          child: LineChart(
-            LineChartData(
-              gridData: FlGridData(show: false),
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text('${value.toInt()}');
-                    },
-                    interval: yInterval, // Y-Axis interval
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            height: 320,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text('${value.toInt()}');
+                      },
+                      interval: yLabelInterval,
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 30,
+          getTitlesWidget: (value, meta) {
+              final int index = value.toInt();
+              if (index >= 0 && index < points.length) {
+                  final DateTime date = DateTime.fromMillisecondsSinceEpoch(
+                      points[index].epoch * 1000);
+                  String formattedDate;
+                  switch (_selectedTimeRange) {
+                      case TimeRange.last24Hours:
+                          formattedDate = DateFormat('HH:mm').format(date); // Time for last 24 hours
+                          break;
+                      case TimeRange.lastWeek:
+                      case TimeRange.allTime:
+                          formattedDate = DateFormat('MM/dd').format(date); // Date for last week and all time
+                          break;
+                  }
+                  return Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Text(
+                          formattedDate,
+                          style: TextStyle(fontSize: 10),
+                      ),
+                  );
+              }
+              return Container();
+          },
+          interval: max(1, points.length / 5), // Adjusting the interval for clarity
+            ),
+        ),
+                  // bottomTitles: AxisTitles(
+                  //   sideTitles: SideTitles(
+                  //     showTitles: true,
+                  //     reservedSize: 30,
+                  //     getTitlesWidget: (value, meta) {
+                  //       final int index = value.toInt();
+                  //       if (index >= 0 && index < points.length) {
+                  //         final DateTime date = DateTime.fromMillisecondsSinceEpoch(
+                  //             points[index].epoch * 1000);
+                  //         return Padding(
+                  //           padding: const EdgeInsets.only(top: 10.0),
+                  //           child: Text(
+                  //             DateFormat('MM/dd HH:mm').format(date),
+                  //             style: TextStyle(fontSize: 10),
+                  //           ),
+                  //         );
+                  //       }
+                  //       return Container();
+                  //     },
+                  //     interval: xLabelInterval,
+                  //   ),
+                  // ),
+                  // Hiding top and right titles
+                                  topTitles: AxisTitles(
+                    // Hide top titles
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    // Hide right titles
+                    sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
-bottomTitles: AxisTitles(
-  sideTitles: SideTitles(
-    showTitles: true,
-    reservedSize: 20,
-    getTitlesWidget: (value, meta) {
-      if (points.isNotEmpty) {
-        // Ensure the index is within the valid range
-        final int index = value.toInt();
-        final int originalIndex = points.length - 1 - index;
-        if (originalIndex >= 0 && originalIndex < points.length) {
-          if (index % (points.length / 4) == 0 || index == points.length - 1) {
-            final DateTime date = DateTime.fromMillisecondsSinceEpoch(
-                points[originalIndex].epoch * 1000);
-            return Padding(
-              padding: const EdgeInsets.only(top: 10.0),
-              child: Text(DateFormat('MM/dd').format(date),
-                  style: TextStyle(fontSize: 10)),
-            );
-          }
-        }
-      }
-      return Container();
-    },
-    interval: 1, // To show every point's label
-  ),
-),
-
-                topTitles: AxisTitles(
-                  // Hide top titles
-                  sideTitles: SideTitles(showTitles: false),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border(
+                    bottom: BorderSide(
+                        color: Colors.black, width: 2), // Show bottom side
+                    left: BorderSide(
+                        color: Colors.black, width: 2), // Show left side
+                    top: BorderSide.none, // Hide top side
+                    right: BorderSide.none, // Hide right side
+                  ),
                 ),
-                rightTitles: AxisTitles(
-                  // Hide right titles
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-              ),
-              borderData: FlBorderData(
-                show: true,
-                border: Border(
-                  bottom: BorderSide(
-                      color: Colors.black, width: 2), // Show bottom side
-                  left: BorderSide(
-                      color: Colors.black, width: 2), // Show left side
-                  top: BorderSide.none, // Hide top side
-                  right: BorderSide.none, // Hide right side
-                ),
-              ),
-              lineBarsData: [
-                LineChartBarData(
-                  spots: _createSpots(points),
-                  isCurved: false, // Set this to false to remove curve effect
-                  // Or set this to true and adjust the below property
-                  // curveSmoothness: 0.1, // Experiment with this value to reduce curve effect
-                  dotData: FlDotData(
-                      show: false,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: Colors.blue,
-                          strokeWidth: 1.5,
-                          strokeColor: Colors.white,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: _createSpots(points),
+                    isCurved: false, // Set this to false to remove curve effect
+                    // Or set this to true and adjust the below property
+                    // curveSmoothness: 0.1, // Experiment with this value to reduce curve effect
+                    dotData: FlDotData(
+                        show: false,
+                        getDotPainter: (spot, percent, barData, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: Colors.blue,
+                            strokeWidth: 1.5,
+                            strokeColor: Colors.white,
+                          );
+                        }),
+                    belowBarData: BarAreaData(show: false),
+                    color: Colors.blue,
+                    barWidth: 3,
+                  ),
+                ],
+                minY: minY,
+                maxY: maxY,
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipBgColor: Colors.blueAccent,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((touchedSpot) {
+                        final DateTime date = DateTime.fromMillisecondsSinceEpoch(
+                            points[touchedSpot.spotIndex].epoch * 1000);
+                        String tooltipText =
+                            DateFormat('MM/dd/yyyy HH:mm').format(date) +
+                                ': ' +
+                                touchedSpot.y.toStringAsFixed(2);
+                        return LineTooltipItem(
+                          tooltipText,
+                          const TextStyle(color: Colors.white),
                         );
-                      }),
-                  belowBarData: BarAreaData(show: false),
-                  color: Colors.blue,
-                  barWidth: 3,
-                ),
-              ],
-              minY: minY,
-              maxY: maxY,
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  tooltipBgColor: Colors.blueAccent,
-                  getTooltipItems: (touchedSpots) {
-                    return touchedSpots.map((touchedSpot) {
-                      final DateTime date = DateTime.fromMillisecondsSinceEpoch(
-                          points[touchedSpot.spotIndex].epoch * 1000);
-                      return LineTooltipItem(
-                        '${touchedSpot.y} at ${DateFormat('MM/dd/yyyy').format(date)}',
-                        const TextStyle(color: Colors.white),
-                      );
-                    }).toList();
-                  },
+                      }).toList();
+                    },
+                  ),
                 ),
               ),
             ),
@@ -189,15 +220,16 @@ bottomTitles: AxisTitles(
   //       (index) => FlSpot(index.toDouble(), points[index].measurement));
   // }
 
-  List<FlSpot> _createSpots(List<DataPoint> points) {
-    // Reverse the list to have the newest data at the end
-    final reversedPoints = List<DataPoint>.from(points.reversed);
+List<FlSpot> _createSpots(List<DataPoint> points) {
+    // No need to reverse, ensure that data is sorted by epoch (if not already)
+    points.sort((a, b) => a.epoch.compareTo(b.epoch));
 
-    return List.generate(reversedPoints.length, (index) {
-      // Use the index as the x-value, keeping the reversed order
-      return FlSpot(index.toDouble(), reversedPoints[index].measurement);
+    return List.generate(points.length, (index) {
+        // Convert each DataPoint to an FlSpot using the index as x-value and measurement as y-value
+        return FlSpot(index.toDouble(), points[index].measurement);
     });
-  }
+}
+
 
   List<DataPoint> _filterDataPoints(
       List<DataPoint> dataPoints, TimeRange timeRange) {

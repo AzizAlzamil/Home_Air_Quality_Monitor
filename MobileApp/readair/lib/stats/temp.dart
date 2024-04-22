@@ -92,7 +92,13 @@ class _TempPageState extends State<TempPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Temperature"),
+        title: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Temperature (°F)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
                         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.help_outline),
@@ -177,9 +183,13 @@ class _TempPageState extends State<TempPage> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('Temperature is ${TEMPmessage(currentTemp?.toDouble() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The Temperature is ${TEMPmessage(currentTemp?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 
@@ -304,8 +314,13 @@ class _TempPageState extends State<TempPage> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child: Text('Temperature Index (F\u00B0)',
-                        style: TextStyle(fontSize: 30))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Temperature Index (°F)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 

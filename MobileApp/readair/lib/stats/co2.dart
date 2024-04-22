@@ -156,9 +156,13 @@ class _CO2PageState extends State<CO2Page> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('Carbon Dioxide is ${message(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The Carbon Dioxide is ${message(current?.toInt() ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 

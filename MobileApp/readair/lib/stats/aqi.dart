@@ -109,7 +109,13 @@ class _AQIPageState extends State<AQIPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Air Quality Index"),
+        title: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Air Quality Index',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
                 actions: <Widget>[
           IconButton(
             icon: Icon(Icons.help_outline),

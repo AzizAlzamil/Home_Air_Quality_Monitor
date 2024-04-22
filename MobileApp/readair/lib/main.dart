@@ -9,6 +9,7 @@ import 'package:readair/data/packet.dart';
 import 'dart:io';
 
 import 'package:readair/homescreen/home.dart';
+import 'package:readair/homescreen/splash.dart';
 import 'package:readair/settings/custom.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
@@ -46,7 +47,7 @@ class MyApp extends StatelessWidget {
       themeMode: themeController.isDarkMode.value
           ? ThemeMode.dark
           : ThemeMode.light, // Use themeMode to switch themes
-      home: MyHomePage(title: 'ReadAIR App v0.01'),
+      home: const SplashScreen(),
     );
   }
 }

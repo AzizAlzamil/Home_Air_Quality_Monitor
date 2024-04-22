@@ -8,6 +8,7 @@ import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:readair/BLE/device_details.dart';
+import 'package:readair/BLE/device_info.dart';
 import 'package:readair/data/packet.dart';
 import 'package:readair/homescreen/home.dart';
 import 'package:readair/main.dart';
@@ -157,6 +158,7 @@ class BluetoothController extends GetxController {
   BluetoothController() {
     debugController = Get.find<DebugController>();
   }
+  
 
   void showGlobalSnackBar(String message) {
     scaffoldMessengerKey.currentState?.showSnackBar(
@@ -181,7 +183,7 @@ class BluetoothController extends GetxController {
       // Check the isDebug flag to decide where to navigate
       if (debugController.isDebug.value) {
         // Navigate to the Device Details Page if debug mode is enabled
-        Get.to(() => DeviceDetailsPage(
+        Get.to(() => DeviceInfoPage(
               device: device,
               onDisconnect: () => disconnectFromDevice(context),
             ));
@@ -197,6 +199,20 @@ class BluetoothController extends GetxController {
       isConnecting.value = false;
       update();
     }
+  }
+
+    Timer? _rapidReadTimer;
+
+  Future<void> rapidReadCommand(BluetoothDevice device) async {
+    await sendReadsNow(device);
+    await Future.delayed(Duration(seconds: 3));
+
+    const rapidReadInterval = Duration(milliseconds: 50); // Fast reading interval
+    _rapidReadTimer?.cancel(); // Stop any existing timer
+
+    _rapidReadTimer = Timer.periodic(rapidReadInterval, (Timer t) async {
+      await readDataFromEsp32(device);
+    });
   }
 
 
@@ -222,12 +238,14 @@ class BluetoothController extends GetxController {
   void checkConnected(BuildContext context) {
     if (connectedDevice != null) {
       // Navigate to the Device Details Page
-      Get.to(() => DeviceDetailsPage(
+      Get.to(() => DeviceInfoPage(
             device: connectedDevice!,
             onDisconnect: () => disconnectFromDevice(context),
           ));
     }
   }
+
+
 
   Future<void> checkConnectedDevice(BuildContext context) async {
     var connectedDevices = await FlutterBluePlus.connectedDevices;
@@ -238,12 +256,41 @@ class BluetoothController extends GetxController {
       BluetoothDevice targetDevice = connectedDevices.first;
       connectedDevice = targetDevice;
       await discoverServices();
-      Get.off(() => DeviceDetailsPage(
+      Get.off(() => DeviceInfoPage(
             device: targetDevice,
             onDisconnect: () => disconnectFromDevice(context),
           ));
     }
   }
+
+// Method to read data from ESP32 using the Bluetooth characteristic
+Future<void> readDataFromEsp32(BluetoothDevice device) async {
+  List<BluetoothService> services = await device.discoverServices();
+  BluetoothCharacteristic? readCharacteristic;
+
+  for (var service in services) {
+    readCharacteristic = service.characteristics.firstWhereOrNull(
+      (c) => c.uuid == Guid("588d30b0-33aa-4654-ab36-56dfa9974b13")
+    );
+
+    if (readCharacteristic != null) {
+      try {
+        var value = await readCharacteristic.read();
+        String receivedData = String.fromCharCodes(value);
+        print("Data read successfully: $receivedData");
+        _processDataPacket(receivedData); // Assuming this method handles the data appropriately
+      } catch (e) {
+        print("Error reading from ESP32: $e");
+      }
+      break; // Exit loop after finding the right characteristic
+    }
+  }
+
+  if (readCharacteristic == null) {
+    print("Read characteristic not found.");
+  }
+}
+
 
   void _processDataPacket(String data) {
     // Split the incoming data by new lines to handle multiple packets
@@ -287,6 +334,11 @@ class BluetoothController extends GetxController {
         ?.showSnackBar(SnackBar(content: Text(message)));
   }
 
+Future<void> sendReadsNow(BluetoothDevice device) async{
+  await sendData(device, 'READ');
+}
+  
+
   Future<void> subscribeToDevice(BluetoothDevice device) async {
     try {
       // Ensure the device is connected before attempting to communicate
@@ -300,7 +352,7 @@ class BluetoothController extends GetxController {
       await Future.delayed(Duration(milliseconds: 250));
 
       // Send 'TGMT=-7' command
-      await sendData(device, 'TGMT=-7');
+      await sendData(device, 'TGMT=+0');
       await Future.delayed(Duration(milliseconds: 250));
 
       // Proceed with discovering services and subscribing to the characteristic
@@ -321,7 +373,33 @@ class BluetoothController extends GetxController {
         }
       }
 
+    //       for (var service in services) {
+    //   for (var characteristic in service.characteristics) {
+    //     if (characteristic.properties.notify) {
+    //       await characteristic.setNotifyValue(true);
+    //       characteristic.value.listen((value) {
+    //         String receivedData = String.fromCharCodes(value);
+    //         if (receivedData.contains('DONE')) {  // Check for 'A' signal
+    //           print("All data received. Transitioning to normal operation.");
+    //         } else {
+    //           _processDataPacket(receivedData);
+    //         }
+    //       });
+    //       isSubscribed.value = true;
+    //       update(); // Notify listeners about the change
+    //       print("Subscribed to characteristic: ${characteristic.uuid}");
+
+    //       await sendData(device, "READ!");  // Send the "READ!" command after subscription
+    //       print("Sent READ! command to device.");
+
+    //       break; // Exit the loop once subscribed
+    //     }
+    //   }
+    // }
+
       //sendData(device, "READ!");
+
+      
 
       _updatTimer?.cancel(); // Cancel any existing timer
       _updatTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
@@ -365,6 +443,8 @@ class BluetoothController extends GetxController {
     }
   }
 
+  
+
   Future scanDevices() async {
     FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
     // FlutterBluePlus.stopScan();
@@ -382,7 +462,7 @@ class BluetoothController extends GetxController {
 
   void startUpdatTimer() {
     _updatTimer?.cancel();
-    _updatTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
+    _updatTimer = Timer.periodic(Duration(seconds: 40), (timer) async {
       if (!isOtaUpdating.value) {
         await sendData(connectedDevice!, "UPDAT");
       }

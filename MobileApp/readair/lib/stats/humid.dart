@@ -95,7 +95,13 @@ class _HumidPageState extends State<HumidPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Humidity (%)"),
+        title: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Humidity (%)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
                         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.help_outline),
@@ -174,9 +180,13 @@ class _HumidPageState extends State<HumidPage> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('The Humidity is ${message(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The Humidity is ${message(current?.toInt() ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 
@@ -330,8 +340,13 @@ class _HumidPageState extends State<HumidPage> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child: Text('Humidity Index (%)',
-                        style: TextStyle(fontSize: 35))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Humidity Index (%)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 

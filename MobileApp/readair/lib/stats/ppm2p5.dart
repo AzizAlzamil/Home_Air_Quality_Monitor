@@ -177,10 +177,13 @@ class _ppm2p5PageState extends State<ppm2p5Page> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('PM is ${message(current ?? 0)}',
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The PM level is ${message(current ?? 0)}',
                         style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold))),
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 

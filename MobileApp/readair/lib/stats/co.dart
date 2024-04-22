@@ -101,7 +101,13 @@ class _COPageState extends State<COPage> {
           icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text("Carbon Monoxide (ppm)"),
+        title: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Carbon Monoxide (ppm)',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
                         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.help_outline),
@@ -171,7 +177,7 @@ class _COPageState extends State<COPage> {
                 title: Center(child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                        'The Carbon Monoxide is ${message(current?.toInt() ?? 0)}',
+                        'The Carbon Monoxide level is ${message(current?.toInt() ?? 0)}',
                         style: TextStyle(
                             fontSize: 25, fontWeight: FontWeight.bold)),
                 ),),
@@ -331,7 +337,7 @@ class _COPageState extends State<COPage> {
                     child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'Carbon Monoxide (ppm)',
+                    'Carbon Monoxide Index (ppm)',
                     style: TextStyle(fontSize: 40),
                   ),
                 )),

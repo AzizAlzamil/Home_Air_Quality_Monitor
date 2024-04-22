@@ -59,13 +59,11 @@ class _VOCPageState extends State<VOCPage> {
   }
   Color? CoordinatedColor(int value) {
     //Colors cordinated with the danger levels
-    if (value <= 220) {
+    if (value <= 150) {
       return Color.fromARGB(255, 48, 133, 56);
-    } else if (value > 221 && value <= 660) {
+    } else if (value > 150 && value <= 250) {
       return Color.fromARGB(255, 229, 193, 13);
-    } else if (value > 500 && value <= 510) {
-      return Color.fromARGB(255, 229, 114, 13);
-    } else if (value > 661 && value <= 1430) {
+    } else if (value > 250 && value <= 400) {
       return Color.fromARGB(255, 217, 19, 4);
     } else {
       return Color.fromARGB(255, 121, 0, 0);
@@ -74,13 +72,11 @@ class _VOCPageState extends State<VOCPage> {
 
   String message(int value) {
     //Displays message below current value
-    if (value <= 220) {
+    if (value <= 150) {
       return "Good";
-    } else if (value > 221 && value <= 660) {
+    } else if (value > 150 && value <= 250) {
       return "Moderate";
-    } else if (value > 500 && value <= 510) {
-      return "Bad";
-    } else if (value > 661 && value <= 1430) {
+    } else if (value > 250 && value <= 400) {
       return "Unhealthy";
     } else {
       return "Dangerous";
@@ -100,7 +96,7 @@ class _VOCPageState extends State<VOCPage> {
         FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'Volatile Organic Compounds (ppb)',
+                    'Volatile Organic Compounds Index',
                     style: TextStyle(fontSize: 40),
                   ),
                 ),
@@ -170,9 +166,13 @@ class _VOCPageState extends State<VOCPage> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text('The VOCs are ${message(current?.toInt() ?? 0)}',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold))),
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The VOCs are ${message(current?.toInt() ?? 0)}',
+                        style: TextStyle(
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 
@@ -306,8 +306,13 @@ class _VOCPageState extends State<VOCPage> {
               padding: EdgeInsets.all(6.0),
               child: ListTile(
                 title: Center(
-                    child: Text('VOC Index (ppb)',
-                        style: TextStyle(fontSize: 34))),
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'VOC Index',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                )),
               ),
             ),
 
@@ -327,7 +332,7 @@ class _VOCPageState extends State<VOCPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('0-220',
+                    child: Text('0-150',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),
@@ -351,7 +356,7 @@ class _VOCPageState extends State<VOCPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('221-660',
+                    child: Text('151-250',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),
@@ -359,29 +364,6 @@ class _VOCPageState extends State<VOCPage> {
               ),
             ),
 
-            const Card(
-              color: Color.fromARGB(255, 229, 114, 13),
-              child: Row(
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text('Bad',
-                          style: TextStyle(fontSize: 30, color: Colors.white70),
-                          textAlign: TextAlign.left),
-                    ),
-                  ),
-                  Spacer(),
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text('-',
-                        style: TextStyle(fontSize: 30, color: Colors.white70),
-                        textAlign: TextAlign.right),
-                  ),
-                ],
-              ),
-            ),
 
             const Card(
               color: Color.fromARGB(255, 217, 19, 4),
@@ -399,7 +381,7 @@ class _VOCPageState extends State<VOCPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('661-1,430',
+                    child: Text('251-400',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),
@@ -423,7 +405,7 @@ class _VOCPageState extends State<VOCPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('1,430 & Above',
+                    child: Text('400 & Above',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),

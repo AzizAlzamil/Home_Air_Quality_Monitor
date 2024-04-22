@@ -22,8 +22,6 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Future<List<DataPacket>> _fetchLastFivePackets() async {
-    // Fetch the last five packets from your database
-    // This is just a placeholder, replace with your actual data fetching logic
     List<DataPacket> packets = await DatabaseService.instance.getLastFivePackets();
     return packets;
   }
@@ -44,9 +42,16 @@ class _StatsPageState extends State<StatsPage> {
           child: Column(
             children: [
               // Passing data to GraphWidget
-              GraphWidget(title: "Temperature", dataPoints: _convertToDataPoints(packets, (p) => p.temp)),
               GraphWidget(title: "AQI", dataPoints: _convertToDataPoints(packets, (p) => p.aqi)),
-              GraphWidget(title: "CO2", dataPoints: _convertToDataPoints(packets, (p) => p.co2)),
+              GraphWidget(title: "Temperature", dataPoints: _convertToDataPoints(packets, (p) => p.temp)),
+              GraphWidget(title: "Carbon Dioxide", dataPoints: _convertToDataPoints(packets, (p) => p.co2)),
+              GraphWidget(title: "Humidity", dataPoints: _convertToDataPoints(packets, (p) => p.humid)),
+              GraphWidget(title: "Carbon Monoxide", dataPoints: _convertToDataPoints(packets, (p) => p.co)),
+              GraphWidget(title: "Volatile Organic Compounds", dataPoints: _convertToDataPoints(packets, (p) => p.voc)),
+              GraphWidget(title: "Nitrogen Oxides", dataPoints: _convertToDataPoints(packets, (p) => p.nox)),
+              GraphWidget(title: "Methane", dataPoints: _convertToDataPoints(packets, (p) => p.ng)),
+              GraphWidget(title: "Particulate Matter 2.5", dataPoints: _convertToDataPoints(packets, (p) => p.ppm2_5)),
+              
             ],
           ),
         ),

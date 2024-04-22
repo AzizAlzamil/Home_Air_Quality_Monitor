@@ -66,13 +66,11 @@ class _NOxPageState extends State<NOxPage> {
 
   Color? CoordinatedColor(int value) {
     //Colors cordinated with the danger levels
-    if (value <= 53) {
+    if (value <= 50) {
       return Color.fromARGB(255, 48, 133, 56);
-    } else if (value > 53 && value <= 100) {
+    } else if (value > 50 && value <= 150) {
       return Color.fromARGB(255, 229, 193, 13);
-    } else if (value > 100 && value <= 360) {
-      return Color.fromARGB(255, 229, 114, 13);
-    } else if (value > 360 && value <= 1250) {
+    } else if (value > 150 && value <= 300) {
       return Color.fromARGB(255, 217, 19, 4);
     } else {
       return Color.fromARGB(255, 121, 0, 0);
@@ -81,13 +79,11 @@ class _NOxPageState extends State<NOxPage> {
 
   String message(int value) {
     //Displays message below current value
-    if (value <= 53) {
+    if (value <= 50) {
       return "Good";
-    } else if (value > 53 && value <= 100) {
+    } else if (value > 50 && value <= 150) {
       return "Moderate";
-    } else if (value > 100 && value <= 360) {
-      return "Bad";
-    } else if (value > 360 && value <= 1250) {
+    }  else if (value > 150 && value <= 300) {
       return "Unhealthy";
     } else {
       return "Dangerous";
@@ -107,7 +103,7 @@ class _NOxPageState extends State<NOxPage> {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'Nitrogen Oxides (Nitrous Oxides)',
+                    'Nitrogen Oxides Index',
                     
                     style: TextStyle(fontSize: 40),
                   ),
@@ -178,11 +174,13 @@ class _NOxPageState extends State<NOxPage> {
             Padding(
               padding: EdgeInsets.all(2.0),
               child: ListTile(
-                title: Center(
-                    child: Text(
-                        'The NOx is ${message(current?.toInt() ?? 0)}',
+                title: Center(child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                        'The NOx level is ${message(current?.toInt() ?? 0)}',
                         style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold))),
+                            fontSize: 25, fontWeight: FontWeight.bold)),
+                ),),
               ),
             ),
 
@@ -319,7 +317,7 @@ class _NOxPageState extends State<NOxPage> {
                     child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    'NOx Index (Nitrous Oxides)',
+                    'NOx Index',
                     style: TextStyle(fontSize: 40),
                   ),
                 )),
@@ -342,7 +340,7 @@ class _NOxPageState extends State<NOxPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('0-53',
+                    child: Text('0-50',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),
@@ -366,31 +364,7 @@ class _NOxPageState extends State<NOxPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('54-100',
-                        style: TextStyle(fontSize: 30, color: Colors.white70),
-                        textAlign: TextAlign.right),
-                  ),
-                ],
-              ),
-            ),
-
-            const Card(
-              color: Color.fromARGB(255, 229, 114, 13),
-              child: Row(
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text('Bad',
-                          style: TextStyle(fontSize: 30, color: Colors.white70),
-                          textAlign: TextAlign.left),
-                    ),
-                  ),
-                  Spacer(),
-                  Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text('101-360',
+                    child: Text('51-150',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),
@@ -414,7 +388,7 @@ class _NOxPageState extends State<NOxPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('361-1250',
+                    child: Text('151-300',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),
@@ -438,7 +412,7 @@ class _NOxPageState extends State<NOxPage> {
                   Spacer(),
                   Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Text('1251-2049',
+                    child: Text('301 & Above',
                         style: TextStyle(fontSize: 30, color: Colors.white70),
                         textAlign: TextAlign.right),
                   ),

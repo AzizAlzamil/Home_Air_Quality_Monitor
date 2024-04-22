@@ -12,21 +12,21 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/services.dart' show Uint8List, rootBundle;
 
-class DeviceDetailsPage extends StatefulWidget {
+class DeviceInfoPage extends StatefulWidget {
   final BluetoothDevice device;
   final VoidCallback onDisconnect;
 
-  const DeviceDetailsPage({
+  const DeviceInfoPage({
     Key? key,
     required this.device,
     required this.onDisconnect,
   }) : super(key: key);
 
   @override
-  State<DeviceDetailsPage> createState() => _DeviceDetailsPageState();
+  State<DeviceInfoPage> createState() => _DeviceInfoPageState();
 }
 
-class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
+class _DeviceInfoPageState extends State<DeviceInfoPage> {
   List<BluetoothService> _services = [];
   Timer? _timer;
   String? _latestReceivedPacket;
@@ -38,21 +38,6 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _connectAndSetupDevice();
-  }
-
-  Future<void> _connectAndSetupDevice() async {
-    // Ensure services are discovered
-    await _discoverServices();
-
-    // Request MTU change
-    await _requestMtuSize(512);
-
-    final BluetoothController bluetoothController =
-        Get.find<BluetoothController>();
-
-    // Subscribe to the device
-    bluetoothController.subscribeToDevice(widget.device);
   }
 
   @override
@@ -63,87 +48,7 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
     super.dispose();
   }
 
-  //--------------------------------INITIALIZATION----------------------------------------------
-
-  Future<void> _discoverServices() async {
-    _services = await widget.device.discoverServices();
-    for (BluetoothService service in _services) {
-      var characteristics = service.characteristics;
-      for (BluetoothCharacteristic characteristic in characteristics) {
-        if (characteristic.uuid ==
-            Guid("588d30b0-33aa-4654-ab36-56dfa9974b13")) {
-          writeCharacteristic = characteristic;
-          print("Write characteristic found");
-          break;
-        }
-        if (characteristic.uuid ==
-            Guid("588d30b0-33aa-4654-ab36-56dfa9974b13")) {
-          readCharacteristic = characteristic;
-          print("Read characteristic found");
-        }
-      }
-    }
-  }
-
-  Future<void> _initializeEsp32Connection() async {
-    // Send current time to ESP32
-    await _sendTimeToEsp32();
-    await Future.delayed(Duration(seconds: 1));
-
-    // Send 'TGMT=-7' command
-    await _sendData('TGMT=-7');
-    await Future.delayed(Duration(seconds: 1));
-
-    // Subscribe to ESP32
-    await _subscribeToDevice();
-  }
-
-  Future<void> _initializeAndAutoRead() async {
-    await _initializeEsp32Connection();
-    await Future.delayed(Duration(seconds: 3));
-    await _sendData("READ!");
-    await Future.delayed(Duration(seconds: 7));
-
-    _setupNotificationForImmediateRead();
-  }
-
-  Future<void> _requestMtuSize(int requestedMtu) async {
-    try {
-      int resultingMtu = await widget.device.requestMtu(requestedMtu);
-      print('MTU size after negotiation: $resultingMtu');
-    } catch (e) {
-      print('Error requesting MTU size: $e');
-    }
-  }
-
 //---------------------------------SUBSCRIPTION--------------------------------------------------
-
-  Future<void> _subscribeToDevice() async {
-    final serviceUuid = Guid("9194f647-3a6c-4cf2-a6d5-187cb05728cd");
-    final characteristicUuid = Guid("588d30b0-33aa-4654-ab36-56dfa9974b13");
-
-    final targetService =
-        _services.firstWhereOrNull((s) => s.uuid == serviceUuid);
-
-    if (targetService != null) {
-      var characteristic = targetService.characteristics
-          .firstWhereOrNull((c) => c.uuid == characteristicUuid);
-
-      if (characteristic != null) {
-        await characteristic.setNotifyValue(true);
-        characteristic.value.listen((value) {
-          String receivedData = String.fromCharCodes(value);
-          _latestReceivedPacket = receivedData;
-          _processDataPacket(receivedData);
-          //_showNotification("Data received from ESP32");
-        });
-
-        setState(() {
-          isSubscribed = true;
-        });
-      }
-    }
-  }
 
   void _setupNotificationForImmediateRead() async {
     final serviceUuid = Guid("9194f647-3a6c-4cf2-a6d5-187cb05728cd");
@@ -176,50 +81,12 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
 
 //--------------------------------READ/WRITE-------------------------------------------------------
 
-  Future<void> _sendTimeToEsp32() async {
-    final serviceUuid = Guid("9194f647-3a6c-4cf2-a6d5-187cb05728cd");
-    final characteristicUuid = Guid("588d30b0-33aa-4654-ab36-56dfa9974b13");
 
-    // Get the current epoch time in seconds.
-    int epochTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-
-    // Create the command string.
-    String timeCommand = "TIME=$epochTime";
-
-    // Convert the command string to bytes.
-    List<int> bytesToSend = utf8.encode(timeCommand);
-
-    // Find the service.
-    final targetService = _services.firstWhereOrNull(
-      (s) => s.uuid == serviceUuid,
-    );
-
-    if (targetService != null) {
-      // Find the characteristic.
-      var characteristic = targetService.characteristics.firstWhereOrNull(
-        (c) => c.uuid == characteristicUuid,
-      );
-
-      if (characteristic != null) {
-        // Write the time command to the ESP32.
-        await characteristic.write(bytesToSend, withoutResponse: false);
-      }
-    }
+  void startRapidReading() {
+    final BluetoothController bluetoothController =
+        Get.find<BluetoothController>();
+    bluetoothController.rapidReadCommand(widget.device);
   }
-
-  void _rapidReadCommand() async {
-    _sendData("READ!");
-    await Future.delayed(Duration(seconds: 3));
-
-    const rapidReadInterval = Duration(
-        milliseconds: 50); // Adjust this interval as needed for faster reading
-    _timer?.cancel();
-
-    _timer = Timer.periodic(rapidReadInterval, (Timer t) async {
-      await _readDataFromEsp32();
-    });
-  }
-  
 
   Future<void> _readDataFromEsp32() async {
     if (writeCharacteristic != null) {
@@ -374,28 +241,17 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
           print(packetData);
           DatabaseService.instance.insertOrUpdateDataPacket(packet);
         } else if (parts.length == 3) {
-      setState(() {
-        pasCo2 = int.tryParse(parts[0]);
-        sen = int.tryParse(parts[1]);
-        fill = double.tryParse(parts[2]);
-      });
-    }
-          
-        else {
+          setState(() {
+            pasCo2 = int.tryParse(parts[0]);
+            sen = int.tryParse(parts[1]);
+            fill = double.tryParse(parts[2]);
+          });
+        } else {
           _showMessage("Received data does not match expected format.");
         }
       } catch (e) {
         print("Error processing packet: $e");
       }
-    }
-  }
-
-  Future<void> _readLatestPacket() async {
-    var packet = await DatabaseService.instance.getLastPacket();
-    if (packet != null) {
-      _showReceivedDataDialog(packet.toString());
-    } else {
-      _showReceivedDataDialog("No data available");
     }
   }
 
@@ -440,32 +296,6 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
     return byteData.buffer.asUint8List();
   }
 
-  // Future<void> sendFirmwareUpdate() async {
-  //   try {
-  //     await _sendData('KAZAM');
-  //     print("KAZAM sent");
-
-  //     await Future.delayed(Duration(seconds: 2));
-
-  //     await _waitForAck();
-  //     print("ACK received");
-
-  //     await Future.delayed(Duration(seconds: 2));
-
-  //     List<int> fileBytes = await loadBinFile();
-  //     int fileSize = fileBytes.length;
-
-  //     //Send the size of the update binary file
-  //     await _sendData("SIZE=${fileSize.toString()}");
-
-  //     await Future.delayed(Duration(seconds: 1));
-
-  //     await _sendFileInChunks(fileBytes, 509);
-  //   } catch (e) {
-  //     _showMessage("Error during firmware update: $e");
-  //     print("Error during firmware update: $e");
-  //   }
-  // }
 
   Future<void> sendFirmwareUpdate() async {
     final BluetoothController bluetoothController =
@@ -496,14 +326,13 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
 
       _showMessage("OTA Update Completed. Disconnecting...");
       await Future.delayed(Duration(seconds: 2));
-
     } catch (e) {
       _showMessage("Error during firmware update: $e");
       print("Error during firmware update: $e");
     } finally {
       bluetoothController
           .finishOtaUpdate(); // Indicate that OTA update has finished
-          bluetoothController.disconnectFromDevice(context); 
+      bluetoothController.disconnectFromDevice(context);
     }
   }
 
@@ -585,16 +414,15 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
     }
   }
 
-    int? pasCo2;
+  int? pasCo2;
   int? sen;
   double? fill;
-
 
   Widget build(BuildContext context) {
     final BluetoothController controller = Get.find<BluetoothController>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Device Details'),
+        title: const Text('Device Info'),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -605,19 +433,16 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
               Text('Device Name: ${widget.device.name ?? 'Unknown'}',
                   style: TextStyle(fontSize: 20)),
               SizedBox(height: 8),
-              Text('Device ID: ${widget.device.id.id}',
-                  style: TextStyle(fontSize: 20)),
-                  SizedBox(height: 8),
               if (pasCo2 != null && sen != null && fill != null) ...[
                 Text('pas_co2: $pasCo2', style: TextStyle(fontSize: 16)),
                 Text('SEN: $sen', style: TextStyle(fontSize: 16)),
                 Text('Fill: $fill', style: TextStyle(fontSize: 16)),
               ],
-              SizedBox(height: 24),
+              SizedBox(height: 12),
               Obx(() => Text(
                     controller.isSubscribed.value
-                        ? "Subscribed"
-                        : "Not Subscribed",
+                        ? "Connected"
+                        : "Not Connected",
                     style: TextStyle(
                       fontSize: 20,
                       color: controller.isSubscribed.value
@@ -625,102 +450,143 @@ class _DeviceDetailsPageState extends State<DeviceDetailsPage> {
                           : Colors.red,
                     ),
                   )),
+              SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: _initializeEsp32Connection,
-                  child: Text('Initialize ESP32 Connection'),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed:
+                          startRapidReading, // Your method for handling button press
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      child: Text('Read Every 100 milliseconds',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize:
+                                  14) // Adjusted for better fit in the button
+                          ),
+                    ),
+                  ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: _initializeAndAutoRead,
-                  child: Text('Initialize then start reading'),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed: () {
+                           _sendData("DEL!!"); },// Your method for handling button press
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      child: Text('Send DEL',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize:
+                                  14) // Adjusted for better fit in the button
+                          ),
+                    ),
+                  ),
                 ),
               ),
-              Padding(
+                            Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: _autoReads,
-                  child: Text('Start Reading'),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed: () {
+                           _sendData("STAT!"); },// Your method for handling button press
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      child: Text('Send STAT',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize:
+                                  14) // Adjusted for better fit in the button
+                          ),
+                    ),
+                  ),
                 ),
               ),
-              Padding(
+                            Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: _rapidReadCommand,
-                  child: Text('Read Every 100 miliseconds'),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed:
+                          sendFirmwareUpdate, // Your method for handling button press
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      child: Text('Update Device',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize:
+                                  14) // Adjusted for better fit in the button
+                          ),
+                    ),
+                  ),
                 ),
               ),
-              Padding(
+                                          Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _sendData("DEL!!");
-                  },
-                  child: Text('Send DEL'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _sendData("STAT!");
-                  },
-                  child: Text('Send STAT'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: sendFirmwareUpdate,
-                  child: Text('Send Bin'),
-                ),
-              ),
-      
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () async {
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed: () async {
                     bool isFileAvailable = await checkBinFileAvailability();
                     String message = isFileAvailable
                         ? "Bin file is available."
                         : "Bin file is not available.";
-                    _showMessage(message);
-                  },
-                  child: Text('Check Bin File Availability'),
+                    _showMessage(message); },// Your method for handling button press
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      child: Text('Check Bin File Availability',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize:
+                                  14) // Adjusted for better fit in the button
+                          ),
+                    ),
+                  ),
                 ),
               ),
-              Padding(
+                            Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: _readFromEspAndDisplay,
-                  child: Text('Read Data from ESP'),
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 1,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed:
+                           widget.onDisconnect, // Your method for handling button press
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))),
+                      child: Text('Disconnect',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize:
+                                  14) // Adjusted for better fit in the button
+                          ),
+                    ),
+                  ),
                 ),
               ),
-      
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: widget.onDisconnect,
-                  child: Text('Disconnect'),
-                ),
-              ),
-              // Padding(
-              //   padding: const EdgeInsets.all(8.0),
-              //   child: ElevatedButton(
-              //     onPressed: _addRandomPacket,
-              //     child: Text('Add Random Packet'),
-              //   ),
-              // ),
-              // Padding(
-              //   padding: const EdgeInsets.all(8.0),
-              //   child: ElevatedButton(
-              //     onPressed: _readLatestPacket,
-              //     child: Text('Read Latest Packet'),
-              //   ),
-              // ),
             ],
           ),
         ),

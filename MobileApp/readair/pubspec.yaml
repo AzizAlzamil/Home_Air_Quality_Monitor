@@ -68,6 +68,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/sparkfunlogo.jpg
     - assets/HomeAir.ino.bin
 
 
